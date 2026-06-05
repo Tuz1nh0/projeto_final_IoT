@@ -1,2 +1,2 @@
-# proejto_final_IoT
+# projeto_final_IoT
 GNSS monitor with Pyhton and TagoIO
