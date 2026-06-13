@@ -116,10 +116,10 @@ static void onewire_read_bit(void) {
 	int bit;
 	onewire_drive_low();
 	esp_rom_delay_us(6);
-	one_wire_release();
+	onewire_release();
 	esp_rom_delay_us(9);
-	bit = gpio_get_leve(ONEWIRE_GPIO);
-	esp_rom_delay_us(ONEWIRE_GPIO);
+	bit = gpio_get_level(ONEWIRE_GPIO);
+	esp_rom_delay_us(55);
 	return bit;
 
 }
@@ -149,7 +149,7 @@ static esp_err_t ds18b20_read_temperature(float *temperature) {
 	}
 	
 	onewire_write_byte(0xCC);
-	onewire_write_byte(Ox44);
+	onewire_write_byte(0x44);
 	vTaskDelay(pdMS_TO_TICKS(750));
 	
 	if(!onewire_reset_pulse()) {
@@ -234,6 +234,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 			}
 		}
 	}
+
 	else if(event_base ==IP_EVENT) {
 		switch(event_id) {
 			case IP_EVENT_STA_GOT_IP: {
@@ -254,26 +255,33 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 void http_get_request_task(void *pvParameters) {
 	
 	float temperature = 0.0;
+
 	while(1) {
 		xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
-		//ADD IF-ELSE STATEMENT?
-		char url[256];
-		sprintf(url, "https://api.thingspeak.com/update?api_key=%s&field1=%.2f", THINGSPEAK_KEY, temperature);
-		esp_http_client_config_t config = {
-			.url = url,
-			.method = HTTP_METHOD_GET,
-			.event_handler = http_get_request_event_handler,
-			.disable_auto_redirect = true,
-			.timeout_ms = 5000,
-		};
 
-		esp_http_client_handle_t client = esp_http_client_init(&config);
-		if(err != ESP_OK) {
-			ESP_LOGE(TAG_HTTP, "Request error: %s", esp_err_to_name(err));
+		if(ds18b20_read_temperature(&temperature) == ESP_OK) {
+			char url[256];
+			sprintf(url, "https://api.thingspeak.com/update?api_key=%s&field1=%.2f", THINGSPEAK_KEY, temper                        ature);
+			esp_http_client_config_t config = {
+				.url = url,
+				.method = HTTP_METHOD_GET,
+				.event_handler = http_get_request_event_handler,
+				.disable_auto_redirect = true,
+				.timeout_ms = 5000,
+			};
+
+			esp_http_client_handle_t client = esp_http_client_init(&config);
+
+			if(err != ESP_OK) {
+				ESP_LOGE(TAG_HTTP, "Request error: %s", esp_err_to_name(err));
+			}
+		}
+
+		else {
+			ESP_LOGE(TAG, "Fail to read DS18B20");
 		}
 
 		esp_http_client_cleanup(client);
-
 		vTaskDelay(pdMS_TO_TICKS(1000*60*60));
 	};
 
@@ -284,7 +292,7 @@ esp_err_t http_get_request_event_handler(esp_http_client_event_t *evt) {
 	switch(evt->event_id) {
 		case HTTP_EVENT_ON_DATA:
 			if(evt->data && evt->data_len > 0) {
-				char *new_buf = realloc(response_buffer, response_len + evt->data_l                                en + 1);
+				char *new_buf = realloc(response_buffer, response_len + evt->data_len + 1);
 				if(!new_buf) {
 					ESP_LOGE(TAG_HTTP, "Fail to rellocate buffer");
 					free(response_buffer);
