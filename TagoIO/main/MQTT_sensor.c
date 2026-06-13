@@ -80,9 +80,9 @@ static void onewire_read_bit(void) {
 	int bit;
 	onewire_drive_low();
 	esp_rom_delay_us(6);
-	one_wire_release();
+	onewire_release();
 	esp_rom_delay_us(9);
-	bit = gpio_get_leve(ONEWIRE_GPIO);
+	bit = gpio_get_level(ONEWIRE_GPIO);
 	esp_rom_delay_us(ONEWIRE_GPIO);
 	return bit;
 
@@ -113,7 +113,7 @@ static esp_err_t ds18b20_read_temperature(float *temperature) {
 	}
 	
 	onewire_write_byte(0xCC);
-	onewire_write_byte(Ox44);
+	onewire_write_byte(0x44);
 	vTaskDelay(pdMS_TO_TICKS(750));
 	
 	if(!onewire_reset_pulse()) {
