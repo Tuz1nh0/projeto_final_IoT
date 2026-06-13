@@ -177,7 +177,7 @@ void nvs_init() {
 
 	esp_err_t ret = nvs_flash_init();
 	if(ret == ESP_ERR_NVS_NO_FREE_PAGES || ret ==ESP_ERR_NVS_NEW_VERSION_FOUND) {
-		nv_flash_erase();
+		nvs_flash_erase();
 		ret = nvs_flash_init();
 	}
 
@@ -239,6 +239,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 			case IP_EVENT_STA_GOT_IP: {
 				ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
 				ESP_LOGI(TAG, "Connected with IP: ", IPSTR, IP2STR(&event->ip_info.ip));
+				xEventGroupsSetBits(wifi_event_group, WIFI_CONNECTED BIT);
 				break;
 			};
 
@@ -250,13 +251,14 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 
 }
 
-void http_get_request_task(int value1, value2) {
+void http_get_request_task(void *pvParameters) {
 	
+	float temperature = 0.0;
 	while(1) {
 		xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
-		
-		char url[256]
-		sprintf(url, "https://api.thingspeak.com/update?api_key=%s&field1=%d&field2=%d", THINGSPEAK_KEY, value1, v                alue2)
+		//ADD IF-ELSE STATEMENT?
+		char url[256];
+		sprintf(url, "https://api.thingspeak.com/update?api_key=%s&field1=%.2f", THINGSPEAK_KEY, temperature);
 		esp_http_client_config_t config = {
 			.url = url,
 			.method = HTTP_METHOD_GET,
@@ -277,7 +279,7 @@ void http_get_request_task(int value1, value2) {
 
 }
 
-esp_err_t http_get_request_event_handler(esp_hhtp_client_event_t *evt) {
+esp_err_t http_get_request_event_handler(esp_http_client_event_t *evt) {
 	
 	switch(evt->event_id) {
 		case HTTP_EVENT_ON_DATA:
@@ -293,7 +295,7 @@ esp_err_t http_get_request_event_handler(esp_hhtp_client_event_t *evt) {
 				response_buffer = new_buf;
 				memcpy(response_buffer + response_len, evt->data, evt->data_len);
 				response_len += evt->data_len;
-				reponse_buffer[response_len] = "\0";
+				reponse_buffer[response_len] = '\0';
 			};
 			break;
 
