@@ -1,0 +1,9 @@
+Command: cmake -G Ninja -B /home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build -DPYTHON_DEPS_CHECKED=1 -DPYTHON=/home/tuzinho/.espressif/tools/python/v6.0/venv/bin/python -DESP_PLATFORM=1 -DIDF_TARGET=esp32 -DCCACHE_ENABLE=False /home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak
+Configuration Report               
+ ───────────────────────────────── 
+   Parser Version: 1               
+   Verbosity: default              
+   Defaults policy: sdkconfig      
+   Status: Finished successfully   
+                                   
+ ───────────────────────────────── 
