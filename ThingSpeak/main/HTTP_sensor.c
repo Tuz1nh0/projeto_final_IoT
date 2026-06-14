@@ -16,13 +16,14 @@
 #include "driver/gpio.h"
 #include "esp_rom_sys.h"
 
-#define ONEWIRE_GPIO GPIO_NUM_4
+#define ONEWIRE_GPIO       GPIO_NUM_4
 
 #define TAG                "Wi-Fi STA"
-#define WIFI_SSID          "ID"
-#define WIFI_PASSWORD      "Senha"
+#define WIFI_SSID          "Arthursouza"
+#define WIFI_PASSWORD      "Maria1979"
 #define TAG_HTTP           "HTTP_CLIENT"
 #define THINGSPEAK_KEY     "NSW0NBGCFQS8EJK5"
+
 #define WIFI_CONNECTED_BIT BIT0
 
 //-----------------VARIABLES AND FUNCTIONS-----------------
@@ -36,8 +37,8 @@ void nvs_init();
 void event_loop_init();
 void wifi_init();
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
-void http_get_request_task();
-esp_err_t http_get_request_event_handler(esp_hhtp_client_event_t *evt);
+void http_get_request_task(void *pvParameters);
+esp_err_t http_get_request_event_handler(esp_http_client_event_t *evt);
 
 //-------------------------MAIN----------------------------
 
@@ -111,7 +112,7 @@ static void onewire_write_bit(int bit) {
 
 }
 
-static void onewire_read_bit(void) {
+static int onewire_read_bit(void) {
 
 	int bit;
 	onewire_drive_low();
@@ -124,7 +125,7 @@ static void onewire_read_bit(void) {
 
 }
 
-static void one_wire_write_byte(uint8_t data) {
+static void onewire_write_byte(uint8_t data) {
 
 	for(int i = 0; i < 8; i++) {
 		onewire_write_bit((data >> i) & 0x01);
@@ -171,7 +172,7 @@ static esp_err_t ds18b20_read_temperature(float *temperature) {
 	
 }
 
-//-----------------------Wi-Fi and ThingSpeak------------------------
+//------------------------Wi-Fi and ThingSpeak------------------------
 
 void nvs_init() {
 
@@ -239,8 +240,8 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 		switch(event_id) {
 			case IP_EVENT_STA_GOT_IP: {
 				ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-				ESP_LOGI(TAG, "Connected with IP: ", IPSTR, IP2STR(&event->ip_info.ip));
-				xEventGroupsSetBits(wifi_event_group, WIFI_CONNECTED BIT);
+				ESP_LOGI(TAG, "Connected with IP: " IPSTR, IP2STR(&event->ip_info.ip));
+				xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
 				break;
 			};
 
@@ -254,14 +255,16 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 
 void http_get_request_task(void *pvParameters) {
 	
-	float temperature = 0.0;
+	float ds18b20_temperature = 0.0;
 
 	while(1) {
 		xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+		
+		esp_err_t ds18b20_err = ds18b20_read_temperature(&ds18b20_temperature);
 
-		if(ds18b20_read_temperature(&temperature) == ESP_OK) {
+		if(ds18b20_err == ESP_OK) {
 			char url[256];
-			sprintf(url, "https://api.thingspeak.com/update?api_key=%s&field1=%.2f", THINGSPEAK_KEY, temper                        ature);
+			snprintf(url, sizeof(url), "http://api.thingspeak.com/update?api_key=%s&field1=%.2f", THINGSPEAK_KEY, ds18b20_temperature);
 			esp_http_client_config_t config = {
 				.url = url,
 				.method = HTTP_METHOD_GET,
@@ -272,18 +275,16 @@ void http_get_request_task(void *pvParameters) {
 
 			esp_http_client_handle_t client = esp_http_client_init(&config);
 
+			esp_err_t err = esp_http_client_perform(client);
+
 			if(err != ESP_OK) {
 				ESP_LOGE(TAG_HTTP, "Request error: %s", esp_err_to_name(err));
 			}
-		}
 
-		else {
-			ESP_LOGE(TAG, "Fail to read DS18B20");
-		}
-
-		esp_http_client_cleanup(client);
-		vTaskDelay(pdMS_TO_TICKS(1000*60*60));
-	};
+			esp_http_client_cleanup(client);
+			vTaskDelay(pdMS_TO_TICKS(15000));
+		};
+	}
 
 }
 
@@ -303,7 +304,7 @@ esp_err_t http_get_request_event_handler(esp_http_client_event_t *evt) {
 				response_buffer = new_buf;
 				memcpy(response_buffer + response_len, evt->data, evt->data_len);
 				response_len += evt->data_len;
-				reponse_buffer[response_len] = '\0';
+				response_buffer[response_len] = '\0';
 			};
 			break;
 
