@@ -15,30 +15,29 @@
 #include "esp_system.h"
 #include "driver/gpio.h"
 #include "esp_rom_sys.h"
+#include "mqtt_client.h"
+#include "mqtt_secrets.h"
 
 #define ONEWIRE_GPIO       GPIO_NUM_4
 
-#define TAG                "Wi-Fi STA"
+#define TAG_WIFI           "Wi-Fi STA"
 #define WIFI_SSID          "ID"
 #define WIFI_PASSWORD      "Senha"
-#define TAG_HTTP           "HTTP_CLIENT"
-#define THINGSPEAK_KEY     "NSW0NBGCFQS8EJK5"
+#define TAG_HTTP           "HTTP_CLIENT
+#define THINGSPEAK_CHANNEL "3407435"
 
 #define WIFI_CONNECTED_BIT BIT0
 
 //-----------------VARIABLES AND FUNCTIONS-----------------
 
-static EventGroupHandle_t wifi_event_group;
+static const char *TAG_MQTT = "MQTT_TCP";
 
-static char *response_buffer = NULL;
-static int response_len = 0;
+static EventGroupHandle_t wifi_event_group;
 
 void nvs_init();
 void event_loop_init();
 void wifi_init();
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
-void http_get_request_task(void *pvParameters);
-esp_err_t http_get_request_event_handler(esp_http_client_event_t *evt);
 
 //-------------------------MAIN----------------------------
 
@@ -59,8 +58,7 @@ void app_main(void) {
 	};
 	gpio_config(&io_config);
 
-	xTaskCreate(&http_get_request_task, "http_get_request_task", 4096, NULL, 5, NULL);
-      
+     
 }
 
 //---------------DS18B20 1-WIRE PROTOCOL------------------
@@ -218,19 +216,19 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 	if(event_base == WIFI_EVENT) {
 		switch(event_id) {
 			case WIFI_EVENT_STA_START: {
-				ESP_LOGI(TAG, "Wi-Fi started. Connecting...");
+				ESP_LOGI(TAG_WIFI, "Wi-Fi started. Connecting...");
 				esp_wifi_connect();
 				break;
 			};
 
 			case WIFI_EVENT_STA_DISCONNECTED: {
-				ESP_LOGW(TAG, "Wi-Fi disconnected. Trying to reconnect...");
+				ESP_LOGW(TAG_WIFI, "Wi-Fi disconnected. Trying to reconnect...");
 				esp_wifi_connect();
 				break;
 			};
 
 			default: {	
-				ESP_LOGI(TAG, "Wi-Fi event not processed: %d", (int) event_id);
+				ESP_LOGI(TAG_WIFI, "Wi-Fi event not processed: %d", (int) event_id);
 				break;
 			}
 		}
@@ -240,7 +238,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 		switch(event_id) {
 			case IP_EVENT_STA_GOT_IP: {
 				ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-				ESP_LOGI(TAG, "Connected with IP: " IPSTR, IP2STR(&event->ip_info.ip));
+				ESP_LOGI(TAG_WIFI, "Connected with IP: " IPSTR, IP2STR(&event->ip_info.ip));
 				xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
 				break;
 			};
@@ -253,84 +251,43 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 
 }
 
-void http_get_request_task(void *pvParameters) {
+static void mqtt_app_start(void) {
 	
-	float ds18b20_temperature = 0.0;
+	esp_mqtt_client_config mqtt_cfg = {
+		.uri = "",
+		.credentials.client_id = SECRET_MQTT_CLIENT_ID,
+		.credentials.username = SECRET_MQTT_USERNAME,
+		.credentials.authentication.password = SECRET_MQTT_PASSWORD
+	};
 
-	while(1) {
-		xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
-		
-		esp_err_t ds18b20_err = ds18b20_read_temperature(&ds18b20_temperature);
-
-		if(ds18b20_err == ESP_OK) {
-			char url[256];
-			snprintf(url, sizeof(url), "http://api.thingspeak.com/update?api_key=%s&field1=%.2f", THINGSPEAK_KEY, ds18b20_temperature);
-			esp_http_client_config_t config = {
-				.url = url,
-				.method = HTTP_METHOD_GET,
-				.event_handler = http_get_request_event_handler,
-				.disable_auto_redirect = true,
-				.timeout_ms = 5000,
-			};
-
-			esp_http_client_handle_t client = esp_http_client_init(&config);
-
-			esp_err_t err = esp_http_client_perform(client);
-
-			if(err != ESP_OK) {
-				ESP_LOGE(TAG_HTTP, "Request error: %s", esp_err_to_name(err));
-			}
-
-			esp_http_client_cleanup(client);
-			vTaskDelay(pdMS_TO_TICKS(15000));
-		};
-	}
+	esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+	esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, client);
+	esp_mqtt_client_start(client);
 
 }
 
-esp_err_t http_get_request_event_handler(esp_http_client_event_t *evt) {
-	
-	switch(evt->event_id) {
-		case HTTP_EVENT_ON_DATA:
-			if(evt->data && evt->data_len > 0) {
-				char *new_buf = realloc(response_buffer, response_len + evt->data_len + 1);
-				if(!new_buf) {
-					ESP_LOGE(TAG_HTTP, "Fail to rellocate buffer");
-					free(response_buffer);
-					response_buffer = NULL;
-					response_len = 0;
-					return ESP_FAIL;
-				}
-				response_buffer = new_buf;
-				memcpy(response_buffer + response_len, evt->data, evt->data_len);
-				response_len += evt->data_len;
-				response_buffer[response_len] = '\0';
-			};
-			break;
+static void mqtt_task(void *pvParameters) {
 
-		case HTTP_EVENT_ON_FINISH:
-			if(response_buffer) {
-				ESP_LOGI(TAG_HTTP, "Received response (%d bytes):\n%s", response_len, response_buffer);
-				free(response_buffer);
-				response_buffer = NULL;
-				response_len = 0;
-			};
-			break;
+	float temperature = 0.0;
+	char payload[64];
+	char topic[128];
 
-		case HTTP_EVENT_DISCONNECTED:
+	snprintf(topic, sizeof(topic), "channels/%s/publish", THINGSPEAK_CHANNEL);
 
-		case HTTP_EVENT_ERROR:
-			if(response_buffer) {
-				free(response_buffer);
-				response_buffer = NULL;
-				response_len = 0;
-				ESP_LOGW(TAG_HTTP, "Request finished with error or disconnection");
-			}
-			break;
-
-		default:
-			break;
+	while(1) {
+		if(ds18b20_read_temperature(&temperature) == ESP_OK) {
+			ESP_LOGI();
+		}
 	}
-	return ESP_OK;
 
-}                    I
+
+
+
+
+
+
+
+
+
+
+
