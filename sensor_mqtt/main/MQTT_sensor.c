@@ -61,7 +61,7 @@ void app_main(void) {
 	};
 	gpio_config(&io_config);
 
-     	mqtt_app_start();
+	mqtt_app_start();
 	xTaskCreate(mqtt_task, "mqtt_task", 4096, NULL, 5, NULL);
 }
 
