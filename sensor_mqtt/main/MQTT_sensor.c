@@ -38,6 +38,9 @@ void nvs_init();
 void event_loop_init();
 void wifi_init();
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+static void mqtt_app_start(void);
+static void mqtt_task(void *pvParameters);
+static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 
 //-------------------------MAIN----------------------------
 
@@ -58,7 +61,8 @@ void app_main(void) {
 	};
 	gpio_config(&io_config);
 
-     
+     	mqtt_app_start();
+	xTaskCreate(mqtt_task, "mqtt_task", 4096, NULL, 5, NULL);
 }
 
 //---------------DS18B20 1-WIRE PROTOCOL------------------
@@ -268,26 +272,53 @@ static void mqtt_app_start(void) {
 
 static void mqtt_task(void *pvParameters) {
 
-	float temperature = 0.0;
+	float ds18b20_temperature = 0.0;
 	char payload[64];
 	char topic[128];
 
 	snprintf(topic, sizeof(topic), "channels/%s/publish", THINGSPEAK_CHANNEL);
 
 	while(1) {
-		if(ds18b20_read_temperature(&temperature) == ESP_OK) {
-			ESP_LOGI();
+		xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+		
+		esp_err_t ds18b20_err = ds18b20_read_temperature(&ds18b20_temperature);
+
+		if(ds18b20_err == ESP_OK) {
+			ESP_LOGI("SENSOR", "Read temperature: %.2f °C", temperature);
+
+			snprintf(payload, sizeof(payload), "field1=%2f", temperature);
+
+			if (mqtt_client != NULL) {
+				int msg_id = esp_mqtt_client_publish(mqtt_client, topic, payload, 0, 1, 0);
+				ESP_LOGI("MQTT", "Publishing [%s] on topic [%s]. Msg_id=%d", payload, topic, msg_id);
+			}
 		}
+		else {
+			ESP_LOGE("SENSOR", "Fail to read temperature");
+		}
+
+		vTaskDelay(pdMS_TO_TICKS(20000))
 	}
 
+}
 
+static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
 
+	switch((esp_mqtt_event_id)event_id) {
+		case MQTT_EVEBT_CONNETCTED:
+			ESP_LOGI("MQTT", "Connected to ThingSpeak MQTT broker!");
+			break;
 
+		case MQTT_EVENT_DISCONNECTED:
+			ESP_LOGI("MQTT", "Disconnected from ThingSpeak MQTT broker!");
+			break;
+	
+		case MQTT_EVENT_ERROR:
+			ESP_LOGI("MQTT", "ThingSpeak MQTT broker error!");
+			break;
 
+		default:
+			break;
+	}
 
-
-
-
-
-
-
+}
