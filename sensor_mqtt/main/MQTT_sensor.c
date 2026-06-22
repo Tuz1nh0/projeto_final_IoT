@@ -23,14 +23,14 @@
 #define TAG_WIFI           "Wi-Fi STA"
 #define WIFI_SSID          "ID"
 #define WIFI_PASSWORD      "Senha"
-#define TAG_HTTP           "HTTP_CLIENT
-#define THINGSPEAK_CHANNEL "3407435"
+#define THINGSPEAK_CHANNEL "3414411"
 
 #define WIFI_CONNECTED_BIT BIT0
 
 //-----------------VARIABLES AND FUNCTIONS-----------------
 
 static const char *TAG_MQTT = "MQTT_TCP";
+esp_mqtt_client_handle_t client =  NULL;
 
 static EventGroupHandle_t wifi_event_group;
 
@@ -257,14 +257,14 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 
 static void mqtt_app_start(void) {
 	
-	esp_mqtt_client_config mqtt_cfg = {
-		.uri = "",
+	esp_mqtt_client_config_t mqtt_cfg = {
+		.broker.address.uri = "mqtt://mqtt3.thingspeak.com",
 		.credentials.client_id = SECRET_MQTT_CLIENT_ID,
 		.credentials.username = SECRET_MQTT_USERNAME,
 		.credentials.authentication.password = SECRET_MQTT_PASSWORD
 	};
 
-	esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+	client = esp_mqtt_client_init(&mqtt_cfg);
 	esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, client);
 	esp_mqtt_client_start(client);
 
@@ -284,12 +284,12 @@ static void mqtt_task(void *pvParameters) {
 		esp_err_t ds18b20_err = ds18b20_read_temperature(&ds18b20_temperature);
 
 		if(ds18b20_err == ESP_OK) {
-			ESP_LOGI("SENSOR", "Read temperature: %.2f °C", temperature);
+			ESP_LOGI("SENSOR", "Read temperature: %.2f °C", ds18b20_temperature);
 
-			snprintf(payload, sizeof(payload), "field1=%2f", temperature);
+			snprintf(payload, sizeof(payload), "field1=%.2f", ds18b20_temperature);
 
-			if (mqtt_client != NULL) {
-				int msg_id = esp_mqtt_client_publish(mqtt_client, topic, payload, 0, 1, 0);
+			if (client != NULL) {
+				int msg_id = esp_mqtt_client_publish(client, topic, payload, 0, 1, 0);
 				ESP_LOGI("MQTT", "Publishing [%s] on topic [%s]. Msg_id=%d", payload, topic, msg_id);
 			}
 		}
@@ -297,15 +297,15 @@ static void mqtt_task(void *pvParameters) {
 			ESP_LOGE("SENSOR", "Fail to read temperature");
 		}
 
-		vTaskDelay(pdMS_TO_TICKS(20000))
+		vTaskDelay(pdMS_TO_TICKS(20000));
 	}
 
 }
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
 
-	switch((esp_mqtt_event_id)event_id) {
-		case MQTT_EVEBT_CONNETCTED:
+	switch((esp_mqtt_event_id_t)event_id) {
+		case MQTT_EVENT_CONNECTED:
 			ESP_LOGI("MQTT", "Connected to ThingSpeak MQTT broker!");
 			break;
 
