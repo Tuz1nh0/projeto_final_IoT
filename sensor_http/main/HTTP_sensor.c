@@ -20,9 +20,9 @@
 
 #define TAG                "Wi-Fi STA"
 #define WIFI_SSID          "ID"
-#define WIFI_PASSWORD      "Senha"
+#define WIFI_PASSWORD      "Password"
 #define TAG_HTTP           "HTTP_CLIENT"
-#define THINGSPEAK_KEY     "NSW0NBGCFQS8EJK5"
+#define THINGSPEAK_KEY     "Your ThingSpeak key"
 
 #define WIFI_CONNECTED_BIT BIT0
 
