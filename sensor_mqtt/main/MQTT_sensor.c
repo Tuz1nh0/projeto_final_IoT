@@ -22,8 +22,8 @@
 
 #define TAG_WIFI           "Wi-Fi STA"
 #define WIFI_SSID          "ID"
-#define WIFI_PASSWORD      "Senha"
-#define THINGSPEAK_CHANNEL "3414411"
+#define WIFI_PASSWORD      "Password"
+#define THINGSPEAK_CHANNEL "Your channel ID"
 
 #define WIFI_CONNECTED_BIT BIT0
 
