@@ -22,4 +22,4 @@ set confirm off
 set confirm on
 
 # Load application symbols
-file /home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader/bootloader.elf
+file /home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader/bootloader.elf

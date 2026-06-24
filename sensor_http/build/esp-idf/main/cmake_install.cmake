@@ -1,4 +1,4 @@
-# Install script for directory: /home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/main
+# Install script for directory: /home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -40,6 +40,6 @@ endif()
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/esp-idf/main/install_local_manifest.txt"
+  file(WRITE "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/esp-idf/main/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

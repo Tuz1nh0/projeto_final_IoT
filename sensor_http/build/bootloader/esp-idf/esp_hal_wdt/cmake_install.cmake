@@ -40,6 +40,6 @@ endif()
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader/esp-idf/esp_hal_wdt/install_local_manifest.txt"
+  file(WRITE "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader/esp-idf/esp_hal_wdt/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

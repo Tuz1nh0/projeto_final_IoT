@@ -39,15 +39,15 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/esp-idf/mbedtls/mbedtls/tf-psa-crypto/drivers/everest/cmake_install.cmake")
-  include("/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/esp-idf/mbedtls/mbedtls/tf-psa-crypto/drivers/p256-m/cmake_install.cmake")
-  include("/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/esp-idf/mbedtls/mbedtls/tf-psa-crypto/drivers/builtin/cmake_install.cmake")
+  include("/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/esp-idf/mbedtls/mbedtls/tf-psa-crypto/drivers/everest/cmake_install.cmake")
+  include("/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/esp-idf/mbedtls/mbedtls/tf-psa-crypto/drivers/p256-m/cmake_install.cmake")
+  include("/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/esp-idf/mbedtls/mbedtls/tf-psa-crypto/drivers/builtin/cmake_install.cmake")
 
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/esp-idf/mbedtls/mbedtls/tf-psa-crypto/drivers/install_local_manifest.txt"
+  file(WRITE "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/esp-idf/mbedtls/mbedtls/tf-psa-crypto/drivers/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

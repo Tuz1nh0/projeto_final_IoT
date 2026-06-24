@@ -39,12 +39,12 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/esp-idf/esp_libc/src/port/cmake_install.cmake")
+  include("/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/esp-idf/esp_libc/src/port/cmake_install.cmake")
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/esp-idf/esp_libc/install_local_manifest.txt"
+  file(WRITE "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/esp-idf/esp_libc/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

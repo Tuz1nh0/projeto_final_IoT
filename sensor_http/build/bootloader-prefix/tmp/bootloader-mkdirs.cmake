@@ -10,18 +10,18 @@ if(NOT EXISTS "/home/tuzinho/.espressif/v6.0/esp-idf/components/bootloader/subpr
   file(MAKE_DIRECTORY "/home/tuzinho/.espressif/v6.0/esp-idf/components/bootloader/subproject")
 endif()
 file(MAKE_DIRECTORY
-  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader"
-  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader-prefix"
-  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader-prefix/tmp"
-  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader-prefix/src/bootloader-stamp"
-  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader-prefix/src"
-  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader-prefix/src/bootloader-stamp"
+  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader"
+  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader-prefix"
+  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader-prefix/tmp"
+  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader-prefix/src/bootloader-stamp"
+  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader-prefix/src"
+  "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader-prefix/src/bootloader-stamp"
 )
 
 set(configSubDirs )
 foreach(subDir IN LISTS configSubDirs)
-    file(MAKE_DIRECTORY "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
+    file(MAKE_DIRECTORY "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
 endforeach()
 if(cfgdir)
-  file(MAKE_DIRECTORY "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader-prefix/src/bootloader-stamp${cfgdir}") # cfgdir has leading slash
+  file(MAKE_DIRECTORY "/home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader-prefix/src/bootloader-stamp${cfgdir}") # cfgdir has leading slash
 endif()

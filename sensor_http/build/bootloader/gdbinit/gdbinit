@@ -1,2 +1,2 @@
-source /home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader/gdbinit/symbols
-source /home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader/gdbinit/connect
+source /home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader/gdbinit/symbols
+source /home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader/gdbinit/connect

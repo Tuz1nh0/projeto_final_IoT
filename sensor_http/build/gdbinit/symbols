@@ -18,8 +18,8 @@ end
 
 # Load bootloader symbols
 set confirm off
-    add-symbol-file /home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/bootloader/bootloader.elf
+    add-symbol-file /home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/bootloader/bootloader.elf
 set confirm on
 
 # Load application symbols
-file /home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/HTTP_sensor.elf
+file /home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/HTTP_sensor.elf

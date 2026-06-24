@@ -263,6 +263,8 @@ void http_get_request_task(void *pvParameters) {
 		esp_err_t ds18b20_err = ds18b20_read_temperature(&ds18b20_temperature);
 
 		if(ds18b20_err == ESP_OK) {
+			ESP_LOGI("SENSOR", "Read temperature: %.2f °C", ds18b20_temperature);
+
 			char url[256];
 			snprintf(url, sizeof(url), "http://api.thingspeak.com/update?api_key=%s&field1=%.2f", THINGSPEAK_KEY, ds18b20_temperature);
 			esp_http_client_config_t config = {

@@ -1,4 +1,4 @@
-/* * Data converted from /home/tuzinho/Desktop/UFSC/projeto_final_IoT/ThingSpeak/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from /home/tuzinho/Desktop/UFSC/projeto_final_IoT/sensor_http/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 #if !defined (__APPLE__) && !defined (__linux__)
